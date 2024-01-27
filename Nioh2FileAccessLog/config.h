@@ -1,0 +1,12 @@
+#pragma once
+class config
+{
+public:
+	static bool enableConsole;
+	static bool enableFileOverride;
+	static bool logFileLoading;
+	static std::map<std::string, std::string> fileOverrides;
+
+	static bool init();
+};
+

@@ -1,0 +1,8 @@
+[General]
+Enable_Console = true		#Enables showing the console
+Enable_FileOverides = true	#Enables Overridering Filenames
+Log_File_Loading = false	#Logs Loaded files to console
+
+#Override files putting the original filename as the key and set the value to the new path
+[FileOverrides]
+#70EA2C86B93C63A66C8EC33787920BC8C2C74E5E69037EC4C2D82C2E28B5A99B = "data\\character\\CN_MIYOSHINO\\CN_MIYOSHINO.pg1m"
