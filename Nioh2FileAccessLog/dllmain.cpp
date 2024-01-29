@@ -4,6 +4,7 @@
 #include "Signature.h"
 #include "config.h"
 #include <stdio.h>
+#include <filesystem>
 
 #pragma region Signatures
 
@@ -24,15 +25,15 @@ void* LoadFile = sigScan(
 
 #pragma region Functions
 
-bool FileExists(const char* path)
+bool FileExists(std::string path)
 {
-    FILE* file;
-    if (file = fopen(path, "r"))
-    {
-        fclose(file);
-        return true;
-    }
-    return false;
+    return std::filesystem::exists("..\\" + path);
+}
+
+void PrintModulePath() {
+    TCHAR buffer[MAX_PATH] = { 0 };
+    GetModuleFileName(NULL, buffer, MAX_PATH);
+    printf("[DebugLog] Module Path: %S\n", buffer);
 }
 
 #pragma endregion
@@ -95,17 +96,24 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             printf("[FunctionLog] LoadFile found at %p\n", LoadFile);
             INSTALL_HOOK(hook_LoadFile);
         }
+
+        PrintModulePath();
         
         if (config::fileOverrides.size() > 0 && config::enableFileOverride)
         {
             for (auto kvp : config::fileOverrides)
             {
-                //This doesn't work yet and idk, that's a future problem tho
-                //if (!FileExists(kvp.second.c_str()))
-                //{
-                //    printf("[FileReplaceLog] File \"%s\" does not exist\n", kvp.second.c_str());
-                //    continue;
-                //}
+                if (kvp.second.size() > 64) {
+                    printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 64 characters\n", kvp.first.c_str(), kvp.second.size());
+                    continue;
+                }
+
+                if (!FileExists(kvp.second))
+                {
+                    printf("[FileReplaceLog] File \"%s\" does not exist\n", kvp.second.c_str());
+                    continue;
+                }
+
                 printf("[FileReplaceLog] replacing filename %s with %s\n", kvp.first.c_str(), kvp.second.c_str());
 
                 void* NameScan = sigScan(
@@ -114,8 +122,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
                 if (NameScan)
                 {
-                    printf("[FileReplaceLog] location of %s found at %p\n", kvp.first.c_str(), NameScan);
-
+                    //printf("[FileReplaceLog] location of %s found at %p\n", kvp.first.c_str(), NameScan);
                     for (int i = 0; i < kvp.second.size(); i++)
                     {
                         WRITE_MEMORY(((u64)NameScan + i), char, kvp.second[i]);
