@@ -16,8 +16,12 @@ void* LoadInf = sigScan(
     "\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x48\x89\x74\x24\x2A\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x81\xEC\xB0\x05\x00\x00",
     "xxxx?xxxx?xxxx?xxxxxxxxxxxxxxxx");
 
-void* LoadFile = sigScan(
+void* LoadFileNioh2 = sigScan(
     "\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\xA8\x2A\x2A\x2A\x2A\x48\x81\xEC\xA0\x04\x00\x00",
+    "xxxxxxxxxx????xxxxxxx");
+
+void* LoadFileNioh1 = sigScan(
+    "\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\xA8\x2A\x2A\x2A\x2A\x48\x81\xEC\xB0\x04\x00\x00",
     "xxxxxxxxxx????xxxxxxx");
 
 
@@ -66,12 +70,16 @@ HOOK(void, _stdcall, hook_LoadInf, LoadInf, u64 param1)
     return orig_hook_LoadInf(param1);
 }
 
-HOOK(void, __stdcall, hook_LoadFile, LoadFile, char* param1, char *param2, u8 param3)
+HOOK(void, __stdcall, hook_LoadFileNioh2, LoadFileNioh2, char* param1, char *param2, u8 param3)
 {
-    //printf("[DebugLog] LoadFile(%p, %p(%s), %i)\n", param1, param2, param2, param3);
     printf("[FileLog] Loaded file %s\n", param2);
+    return orig_hook_LoadFileNioh2(param1, param2, param3);
+}
 
-    return orig_hook_LoadFile(param1, param2, param3);
+HOOK(void, __stdcall, hook_LoadFileNioh1, LoadFileNioh1, char* param1, char* param2, u8 param3)
+{
+    printf("[FileLog] Loaded file %s\n", param2);
+    return orig_hook_LoadFileNioh1(param1, param2, param3);
 }
 
 #pragma endregion
@@ -91,10 +99,16 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             AttachConsole(GetCurrentProcessId());
             freopen("CON", "w", stdout);
         }
-
-        if (LoadFile && config::logFileLoading) {
-            printf("[FunctionLog] LoadFile found at %p\n", LoadFile);
-            INSTALL_HOOK(hook_LoadFile);
+        
+        if (config::logFileLoading) {
+            if (LoadFileNioh2) {
+                printf("[FunctionLog] LoadFile found at %p\n", LoadFileNioh2);
+                INSTALL_HOOK(hook_LoadFileNioh2);
+            }
+            else if (LoadFileNioh1) {
+                printf("[FunctionLog] LoadFile found at %p\n", LoadFileNioh2);
+                INSTALL_HOOK(hook_LoadFileNioh1);
+            }
         }
 
         PrintModulePath();

@@ -1,5 +1,6 @@
-# Nioh2-Mod-Loader
- WIP code hook mod loader for Nioh 2
+# Nioh-Mod-Loader
+ WIP code hook mod loader for Nioh 1 & 2
+ The main focus of this mod loader is support for Nioh 2 but due to how similar the engines are I'll support both games when possible.
 
 ### Requirements
 [Ultimate ASI Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases), you'll want the one labeled "x64".
@@ -11,11 +12,11 @@
 
 ### Usage
 The Mod loader contains a few options in the config.toml in the plugins folder
-| Option | type | Info |
-| -------- | ------ | -----|
-| Enable_Console | bool | Enables showing the console |
-| Enable_FileOverides | bool | Enables loose files to be loaded over archive files |
-| Log_File_Loading | bool | Prints loaded file names to the console as the file is loaded |
+| Option | type | Info | Nioh 1 | Nioh 2 |
+| ------ | ---- | ---- | ------ | ------ |
+| Enable_Console | bool | Enables showing the console | [x] | [x] |
+| Enable_FileOverides | bool | Enables loose files to be loaded over archive files | [x] | [x] |
+| Log_File_Loading | bool | Prints loaded file names to the console as the file is loaded | [x] | [x] |
 
 #### File Overrides
 in the FileOverrides section of the toml archive files can be overwittern.  
