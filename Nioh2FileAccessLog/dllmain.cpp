@@ -5,6 +5,7 @@
 #include "config.h"
 #include <stdio.h>
 #include <filesystem>
+#include <Psapi.h>
 
 #pragma region Signatures
 
@@ -38,6 +39,45 @@ void PrintModulePath() {
     TCHAR buffer[MAX_PATH] = { 0 };
     GetModuleFileName(NULL, buffer, MAX_PATH);
     printf("[DebugLog] Module Path: %S\n", buffer);
+}
+
+DWORD_PTR GetProcessBaseAddress(DWORD processID)
+{
+    DWORD_PTR   baseAddress = 0;
+    HANDLE      processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+    HMODULE* moduleArray;
+    LPBYTE      moduleArrayBytes;
+    DWORD       bytesRequired;
+
+    if (processHandle)
+    {
+        if (EnumProcessModules(processHandle, NULL, 0, &bytesRequired))
+        {
+            if (bytesRequired)
+            {
+                moduleArrayBytes = (LPBYTE)LocalAlloc(LPTR, bytesRequired);
+
+                if (moduleArrayBytes)
+                {
+                    unsigned int moduleCount;
+
+                    moduleCount = bytesRequired / sizeof(HMODULE);
+                    moduleArray = (HMODULE*)moduleArrayBytes;
+
+                    if (EnumProcessModules(processHandle, moduleArray, bytesRequired, &bytesRequired))
+                    {
+                        baseAddress = (DWORD_PTR)moduleArray[0];
+                    }
+
+                    LocalFree(moduleArrayBytes);
+                }
+            }
+        }
+
+        CloseHandle(processHandle);
+    }
+
+    return baseAddress;
 }
 
 #pragma endregion
@@ -99,6 +139,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             AttachConsole(GetCurrentProcessId());
             freopen("CON", "w", stdout);
         }
+        printf("[DebugLog] Base Address: %p\n", GetProcessBaseAddress(GetCurrentProcessId()));
+        PrintModulePath();
         
         if (config::logFileLoading) {
             if (LoadFileNioh2) {
@@ -110,8 +152,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                 INSTALL_HOOK(hook_LoadFileNioh1);
             }
         }
-
-        PrintModulePath();
         
         if (config::fileOverrides.size() > 0 && config::enableFileOverride)
         {
