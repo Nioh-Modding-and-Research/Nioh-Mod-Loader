@@ -4,6 +4,7 @@
 bool config::enableConsole;
 bool config::enableFileOverride;
 bool config::logFileLoading;
+bool config::extendedPathLength;
 std::map<std::string, std::string> config::fileOverrides;
 
 bool config::init()
@@ -29,6 +30,7 @@ bool config::init()
 	enableConsole = config["General"]["Enable_Console"].value_or(true);
 	enableFileOverride = config["General"]["Enable_FileOverides"].value_or(true);
 	logFileLoading = config["General"]["Log_File_Loading"].value_or(false);
+	extendedPathLength = config["Experimental"]["Extended_Path_Length"].value_or(false);
 
 	auto table = config["FileOverrides"];
 	if (table.as_table()) 

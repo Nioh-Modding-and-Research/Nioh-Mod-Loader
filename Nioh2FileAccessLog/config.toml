@@ -3,6 +3,10 @@ Enable_Console = true		#Enables showing the console
 Enable_FileOverides = true	#Enables Overridering Filenames
 Log_File_Loading = false	#Logs Loaded files to console
 
+#Experimental options are largely untested and potentially dangerous
+[Experimental]
+Extended_Path_Length = false	#Extends the Fileoveride Path limit into the 15 of the 16 padding bytes between file names
+
 #Override files putting the original filename as the key and set the value to the new path
 [FileOverrides]
 #70EA2C86B93C63A66C8EC33787920BC8C2C74E5E69037EC4C2D82C2E28B5A99B = "data\\character\\CN_MIYOSHINO\\CN_MIYOSHINO.pg1m"

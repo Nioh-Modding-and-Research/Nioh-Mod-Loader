@@ -117,8 +117,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         {
             for (auto kvp : config::fileOverrides)
             {
-                if (kvp.second.size() > 64) {
+                if (config::extendedPathLength == false && kvp.second.size() > 64) {
                     printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 64 characters\n", kvp.first.c_str(), kvp.second.size());
+                    continue;
+                }
+                else if (config::extendedPathLength == true && kvp.second.size() > 79) {
+                    printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 79 characters\n", kvp.first.c_str(), kvp.second.size());
                     continue;
                 }
 
