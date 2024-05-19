@@ -142,7 +142,22 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         }
         printf("[DebugLog] Base Address: %p\n", GetProcessBaseAddress(GetCurrentProcessId()));
         PrintModulePath();
-        mod::init();
+
+        if (std::filesystem::exists("..\\mods")) {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator("..\\mods"))
+            {
+                if (std::filesystem::path(entry.path()).extension() != ".toml")
+                    continue;
+                printf("[DebugLog] processing: %S\n", entry.path().filename().c_str());
+
+                auto overrides = mod::Load(entry.path().string());
+
+                config::fileOverrides.insert(overrides.begin(), overrides.end());
+            }
+        }
+        else {
+            printf("[DebugLog] Could not find mods path\n");
+        }
         
         if (config::logFileLoading) {
             if (LoadFileNioh2) {
@@ -154,8 +169,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                 INSTALL_HOOK(hook_LoadFileNioh1);
             }
         }
-        
-        config::fileOverrides.insert(mod::fileOverrides.begin(), mod::fileOverrides.end());
         if (config::fileOverrides.size() > 0 && config::enableFileOverride)
         {
             for (auto kvp : config::fileOverrides)

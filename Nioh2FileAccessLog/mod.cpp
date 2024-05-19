@@ -16,6 +16,7 @@ bool mod::init()
 		printf("[DebugLog] Could not find mods path\n");
 	}
 
+	toml::v3::node_view<toml::v3::node> table;
 	for (const auto& entry : std::filesystem::recursive_directory_iterator("..\\mods")) 
 	{
 		if (std::filesystem::path(entry.path()).extension() != ".toml")
@@ -25,7 +26,7 @@ bool mod::init()
 
 		try
 		{
-			std::ifstream file(entry.path().string());
+			std::ifstream file(entry.path());
 			std::string str;
 			while (std::getline(file, str))
 				fileString += str + "\n";
@@ -38,7 +39,7 @@ bool mod::init()
 			MessageBoxA(nullptr, text, "File Access Log", MB_OK | MB_ICONERROR);
 		}
 
-		auto table = config["FileOverrides"];
+		table = config["FileOverrides"];
 		if (table.as_table())
 		{
 			for (auto [key, value] : *table.as_table())
@@ -58,4 +59,47 @@ bool mod::init()
 	}
 
 	return true;
+}
+
+std::map<std::string, std::string> mod::Load(std::string path) 
+{
+	toml::table config;
+	std::string fileString = "";
+	std::map<std::string, std::string> fileOverridelist;
+	printf("[DebugLog] processing: %S\n", path.c_str());
+
+	try
+	{
+		std::ifstream file(path);
+		std::string str;
+		while (std::getline(file, str))
+			fileString += str + "\n";
+		config = toml::parse(fileString);
+	}
+	catch (std::exception& exception)
+	{
+		char text[1024];
+		sprintf_s(text, "Failed to parse %S:\n%s", path.c_str(), exception.what());
+		MessageBoxA(nullptr, text, "File Access Log", MB_OK | MB_ICONERROR);
+	}
+
+	toml::v3::node_view<toml::v3::node> table = config["FileOverrides"];
+	if (table.as_table())
+	{
+		for (auto [key, value] : *table.as_table())
+		{
+			std::string k = key.str().data();
+			std::string v = value.value_or("");
+
+			if (v == "")
+			{
+				printf("[FileReplaceLog] replacement file path for \"%s\" is empty\n", k.c_str());
+				continue;
+			}
+
+			fileOverridelist.insert({ k, v });
+		}
+	}
+
+	return fileOverridelist;
 }

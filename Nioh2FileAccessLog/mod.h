@@ -5,5 +5,6 @@ public:
 	static std::map<std::string, std::string> fileOverrides;
 
 	static bool init();
+	static std::map<std::string, std::string> Load(std::string path);
 };
 
