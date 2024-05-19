@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "config.h"
+using namespace std;
 
 bool config::enableConsole;
 bool config::enableFileOverride;

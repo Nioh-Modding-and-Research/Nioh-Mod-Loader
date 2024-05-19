@@ -3,6 +3,7 @@
 #include "structs.h"
 #include "Signature.h"
 #include "config.h"
+#include "mod.h"
 #include <stdio.h>
 #include <filesystem>
 #include <Psapi.h>
@@ -141,6 +142,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         }
         printf("[DebugLog] Base Address: %p\n", GetProcessBaseAddress(GetCurrentProcessId()));
         PrintModulePath();
+        mod::init();
         
         if (config::logFileLoading) {
             if (LoadFileNioh2) {
@@ -153,6 +155,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             }
         }
         
+        config::fileOverrides.insert(mod::fileOverrides.begin(), mod::fileOverrides.end());
         if (config::fileOverrides.size() > 0 && config::enableFileOverride)
         {
             for (auto kvp : config::fileOverrides)
