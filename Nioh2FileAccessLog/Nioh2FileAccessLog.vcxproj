@@ -91,6 +91,7 @@
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);detours;</LibraryPath>
     <OutDir>Build\OutputDLL</OutDir>
     <TargetExt>.asi</TargetExt>
+    <TargetName>NiohModLoader</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

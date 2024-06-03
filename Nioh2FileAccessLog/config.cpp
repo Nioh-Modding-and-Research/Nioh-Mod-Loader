@@ -25,7 +25,7 @@ bool config::init()
 	{
 		char text[1024];
 		sprintf_s(text, "Failed to parse config.toml:\n%s", exception.what());
-		MessageBoxA(nullptr, text, "File Access Log", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, text, "Nioh Mod Loader", MB_OK | MB_ICONERROR);
 	}
 
 	enableConsole = config["General"]["Enable_Console"].value_or(true);

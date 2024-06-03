@@ -36,7 +36,7 @@ bool mod::init()
 		{
 			char text[1024];
 			sprintf_s(text, "Failed to parse %S:\n%s", entry.path().c_str(), exception.what());
-			MessageBoxA(nullptr, text, "File Access Log", MB_OK | MB_ICONERROR);
+			MessageBoxA(nullptr, text, "Nioh Mod Loader", MB_OK | MB_ICONERROR);
 		}
 
 		table = config["FileOverrides"];
@@ -80,7 +80,7 @@ std::map<std::string, std::string> mod::Load(std::string path)
 	{
 		char text[1024];
 		sprintf_s(text, "Failed to parse %S:\n%s", path.c_str(), exception.what());
-		MessageBoxA(nullptr, text, "File Access Log", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, text, "Nioh Mod Loader", MB_OK | MB_ICONERROR);
 	}
 
 	toml::v3::node_view<toml::v3::node> table = config["FileOverrides"];
