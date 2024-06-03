@@ -26,7 +26,6 @@ void* LoadFileNioh1 = sigScan(
     "\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\xA8\x2A\x2A\x2A\x2A\x48\x81\xEC\xB0\x04\x00\x00",
     "xxxxxxxxxx????xxxxxxx");
 
-
 #pragma endregion
 
 #pragma region Functions
@@ -130,6 +129,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                        LPVOID lpReserved
                      )
 {
+    char* modspath = new char[0x100];
+
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
@@ -142,13 +143,16 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         }
         printf("[DebugLog] Base Address: %p\n", GetProcessBaseAddress(GetCurrentProcessId()));
         PrintModulePath();
+        
+        strcpy(modspath, "..\\");
+        strcat(modspath, config::ModsPath.c_str());
 
-        if (std::filesystem::exists("..\\mods")) {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator("..\\mods"))
+        if (std::filesystem::exists(modspath)) {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(modspath))
             {
                 if (std::filesystem::path(entry.path()).extension() != ".toml")
                     continue;
-                printf("[DebugLog] processing: %S\n", entry.path().filename().c_str());
+                //printf("[DebugLog] processing: %S\n", entry.path().filename().c_str());
 
                 auto overrides = mod::Load(entry.path().string());
 
@@ -156,7 +160,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             }
         }
         else {
-            printf("[DebugLog] Could not find mods path\n");
+            printf("[DebugLog] Could not find mods path \"%s\" \n", modspath);
         }
         
         if (config::logFileLoading) {
@@ -169,6 +173,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                 INSTALL_HOOK(hook_LoadFileNioh1);
             }
         }
+
         if (config::fileOverrides.size() > 0 && config::enableFileOverride)
         {
             for (auto kvp : config::fileOverrides)

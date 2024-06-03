@@ -2,6 +2,7 @@
 Enable_Console = true		#Enables showing the console
 Enable_FileOverides = true	#Enables Overridering Filenames
 Log_File_Loading = false	#Logs Loaded files to console
+ModsPath = "mods"			#Path relative to the game exe to search for mod tomls
 
 #Experimental options are largely untested and potentially dangerous
 [Experimental]

@@ -7,6 +7,7 @@ bool config::enableFileOverride;
 bool config::logFileLoading;
 bool config::extendedPathLength;
 std::map<std::string, std::string> config::fileOverrides;
+std::string config::ModsPath;
 
 bool config::init()
 {
@@ -32,6 +33,7 @@ bool config::init()
 	enableFileOverride = config["General"]["Enable_FileOverides"].value_or(true);
 	logFileLoading = config["General"]["Log_File_Loading"].value_or(false);
 	extendedPathLength = config["Experimental"]["Extended_Path_Length"].value_or(false);
+	ModsPath = config["General"]["ModsPath"].value_or("mods");
 
 	auto table = config["FileOverrides"];
 	if (table.as_table()) 
