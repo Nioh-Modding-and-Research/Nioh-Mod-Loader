@@ -66,7 +66,6 @@ std::map<std::string, std::string> mod::Load(std::string path)
 	toml::table config;
 	std::string fileString = "";
 	std::map<std::string, std::string> fileOverridelist;
-	printf("[DebugLog] processing: %S\n", path.c_str());
 
 	try
 	{

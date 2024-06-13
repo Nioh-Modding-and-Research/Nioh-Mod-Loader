@@ -152,7 +152,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             {
                 if (std::filesystem::path(entry.path()).extension() != ".toml")
                     continue;
-                //printf("[DebugLog] processing: %S\n", entry.path().filename().c_str());
+                printf("[ModConfigLog] processing: %S", entry.path().filename().c_str());
+                printf("\n");
 
                 auto overrides = mod::Load(entry.path().string());
 
@@ -160,7 +161,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
             }
         }
         else {
-            printf("[DebugLog] Could not find mods path \"%s\" \n", modspath);
+            printf("[ModConfigLog] Could not find mods path \"%s\" \n", modspath);
         }
         
         if (config::logFileLoading) {
