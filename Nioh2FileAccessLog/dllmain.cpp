@@ -26,6 +26,10 @@ void* LoadFileNioh1 = sigScan(
     "\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\xA8\x2A\x2A\x2A\x2A\x48\x81\xEC\xB0\x04\x00\x00",
     "xxxxxxxxxx????xxxxxxx");
 
+void* exit_or_terminate_process = sigScan(
+    "\x40\x53\x48\x83\xEC\x20\x8B\xD9\xE8\x2A\x2A\x2A\x2A\x83\xF8\x01",
+    "xxxxxxxxx????xxx");
+
 #pragma endregion
 
 #pragma region Functions
@@ -122,97 +126,113 @@ HOOK(void, __stdcall, hook_LoadFileNioh1, LoadFileNioh1, char* param1, char* par
     return orig_hook_LoadFileNioh1(param1, param2, param3);
 }
 
+HOOK(void, __cdecl, hook_exit_or_terminate_process, exit_or_terminate_process, u8 param1)
+{
+    printf("Game exit or terminate triggered, aborting plugin.");
+    orig_hook_exit_or_terminate_process(param1);
+    abort;
+}
+
 #pragma endregion
+
+DWORD MainThread(HMODULE Module)
+{
+    char* modspath = new char[0x100];
+
+    //Install abort handling hook so plugin will close when game closes just in case
+    INSTALL_HOOK(hook_exit_or_terminate_process);
+
+    config::init();
+    if (!GetConsoleWindow() && config::enableConsole) // open console output
+    {
+        AllocConsole();
+        AttachConsole(GetCurrentProcessId());
+        freopen("CON", "w", stdout);
+    }
+    printf("[DebugLog] Base Address: %p\n", GetProcessBaseAddress(GetCurrentProcessId()));
+    PrintModulePath();
+
+    //strcpy(modspath, "..\\");
+    strcpy(modspath, config::ModsPath.c_str());
+
+    if (std::filesystem::exists(modspath)) {
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(modspath))
+        {
+            if (std::filesystem::path(entry.path()).extension() != ".toml")
+                continue;
+            printf("[ModConfigLog] processing: %S", entry.path().filename().c_str());
+            printf("\n");
+
+            auto overrides = mod::Load(entry.path().string());
+
+            config::fileOverrides.insert(overrides.begin(), overrides.end());
+        }
+    }
+    else {
+        printf("[ModConfigLog] Could not find mods path \"%s\" \n", modspath);
+    }
+
+    if (config::logFileLoading) {
+        if (LoadFileNioh2) {
+            printf("[FunctionLog] LoadFile found at %p\n", LoadFileNioh2);
+            INSTALL_HOOK(hook_LoadFileNioh2);
+        }
+        else if (LoadFileNioh1) {
+            printf("[FunctionLog] LoadFile found at %p\n", LoadFileNioh2);
+            INSTALL_HOOK(hook_LoadFileNioh1);
+        }
+    }
+
+    if (config::fileOverrides.size() > 0 && config::enableFileOverride)
+    {
+        for (auto kvp : config::fileOverrides)
+        {
+            if (config::extendedPathLength == false && kvp.second.size() > 64) {
+                printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 64 characters\n", kvp.first.c_str(), kvp.second.size());
+                continue;
+            }
+            else if (config::extendedPathLength == true && kvp.second.size() > 79) {
+                printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 79 characters\n", kvp.first.c_str(), kvp.second.size());
+                continue;
+            }
+
+            if (!std::filesystem::exists(kvp.second))
+            {
+                printf("[FileReplaceLog] File \"%s\" does not exist\n", kvp.second.c_str());
+                continue;
+            }
+
+            printf("[FileReplaceLog] Replaced file %s\n", kvp.second.c_str());
+
+            void* NameScan = sigScan(
+                kvp.first.c_str(),
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+            if (NameScan)
+            {
+                //printf("[FileReplaceLog] location of %s found at %p\n", kvp.first.c_str(), NameScan);
+                for (int i = 0; i < kvp.second.size(); i++)
+                {
+                    WRITE_MEMORY(((u64)NameScan + i), char, kvp.second[i]);
+                }
+                WRITE_MEMORY(((u64)NameScan + kvp.second.size()), char, "\0");
+            }
+        }
+    }
+
+    return 0;
+}
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
                      )
 {
-    char* modspath = new char[0x100];
-
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        config::init();
-        if (!GetConsoleWindow() && config::enableConsole) // open console output
-        {
-            AllocConsole();
-            AttachConsole(GetCurrentProcessId());
-            freopen("CON", "w", stdout);
-        }
-        printf("[DebugLog] Base Address: %p\n", GetProcessBaseAddress(GetCurrentProcessId()));
-        PrintModulePath();
         
-        strcpy(modspath, "..\\");
-        strcat(modspath, config::ModsPath.c_str());
-
-        if (std::filesystem::exists(modspath)) {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(modspath))
-            {
-                if (std::filesystem::path(entry.path()).extension() != ".toml")
-                    continue;
-                printf("[ModConfigLog] processing: %S", entry.path().filename().c_str());
-                printf("\n");
-
-                auto overrides = mod::Load(entry.path().string());
-
-                config::fileOverrides.insert(overrides.begin(), overrides.end());
-            }
-        }
-        else {
-            printf("[ModConfigLog] Could not find mods path \"%s\" \n", modspath);
-        }
-        
-        if (config::logFileLoading) {
-            if (LoadFileNioh2) {
-                printf("[FunctionLog] LoadFile found at %p\n", LoadFileNioh2);
-                INSTALL_HOOK(hook_LoadFileNioh2);
-            }
-            else if (LoadFileNioh1) {
-                printf("[FunctionLog] LoadFile found at %p\n", LoadFileNioh2);
-                INSTALL_HOOK(hook_LoadFileNioh1);
-            }
-        }
-
-        if (config::fileOverrides.size() > 0 && config::enableFileOverride)
-        {
-            for (auto kvp : config::fileOverrides)
-            {
-                if (config::extendedPathLength == false && kvp.second.size() > 64) {
-                    printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 64 characters\n", kvp.first.c_str(), kvp.second.size());
-                    continue;
-                }
-                else if (config::extendedPathLength == true && kvp.second.size() > 79) {
-                    printf("[FileReplaceLog] replacement file path for \"%s\" is too long, path is %zi current limit is 79 characters\n", kvp.first.c_str(), kvp.second.size());
-                    continue;
-                }
-
-                if (!FileExists(kvp.second))
-                {
-                    printf("[FileReplaceLog] File \"%s\" does not exist\n", kvp.second.c_str());
-                    continue;
-                }
-
-                printf("[FileReplaceLog] replacing filename %s with %s\n", kvp.first.c_str(), kvp.second.c_str());
-
-                void* NameScan = sigScan(
-                    kvp.first.c_str(),
-                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-
-                if (NameScan)
-                {
-                    //printf("[FileReplaceLog] location of %s found at %p\n", kvp.first.c_str(), NameScan);
-                    for (int i = 0; i < kvp.second.size(); i++)
-                    {
-                        WRITE_MEMORY(((u64)NameScan + i), char, kvp.second[i]);
-                    }
-                    WRITE_MEMORY(((u64)NameScan + kvp.second.size()), char, "\0");
-                }
-            }
-        }
-
-
+        CreateThread(0, 0, (LPTHREAD_START_ROUTINE)MainThread, hModule, 0, 0);
 
         return TRUE;
     case DLL_THREAD_ATTACH:
